@@ -3,7 +3,18 @@
 (function (){
   var compile = window.compile = {
     Error:{
-      NotAFunction:0x01
+      Messages:{
+        TypeError: {
+          NotAFunction:'is not a function',
+          throw:function (ref) {
+            return Error(TypeError, 'NotAFunction', ref);
+          }
+        },
+        
+      },
+      NotAFunction:function () {
+        return new TypeError()
+      }
     },
     Statement:{
       define:Statement,
@@ -32,6 +43,7 @@
     if (!(this instanceof Arguments)) return new Arguments(arguments);
     if (arguments[0] instanceof Arguments) this.arguments = arguments[0].arguments;
     if (typeof arguments[0] == 'undefined') this.arguments = [];
+    if (!arguments[0]) arguments = this.arguments = [];
     if (typeof arguments[0] == 'object' && arguments[0].length >= 0) arguments = arguments[0];
     this.arguments = arguments;
     this.precompiled = '';
@@ -48,9 +60,8 @@
       this.precompiled += (a?',':'')+arguments[a];
     }
     this.chain = function chain (Stat) {
-      if (Stat instanceof Statement)
+      if (Stat instanceof Statement || Stat instanceof Function)
       return new Statement(this.precompiled+'.'+Stat.precompiled);
-      else return this;
     };
   };
   function Function (name, args, body) {
@@ -104,4 +115,7 @@
     }
     return new Statement(Func.precompiled + '('+precompiled + ')');
   };
+  function Error (errorType, error, ref) {
+    return new errorType(ref+' '+compile.Error[errorType][error].message);
+  }
 })();
